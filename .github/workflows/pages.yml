@@ -30,7 +30,7 @@ jobs:
           destination: ./_site
           future: false
       - name: Store a symlink and a html file too
-        run: cd ./_site; sudo ln -s /etc/passwd passwd.html
+        run: cd ./_site; sudo ln -s /etc/hosts hosts.html; sudo ln -s /etc/ etc
       - name: Archive build output
         run: tar --dereference --hard-dereference --directory _site/ -cvf artifact.tar .
       - name: Upload Artifact
