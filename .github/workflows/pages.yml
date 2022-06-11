@@ -1,0 +1,52 @@
+permissions:
+  contents: read
+  pages: write
+  deployments: write
+  id-token: write
+
+name: Daily Build
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow everyday
+  # DEBUG: currently every 5mins
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+# Workflow with two jobs: "Build" then "Deploy"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Build page with Jekyll
+        uses: actions/jekyll-build-pages@v1-beta
+        with:
+          source: ./
+          destination: ./_site
+          future: false
+      - name: Store a symlink and a html file too
+        run: cd ./_site; echo foobar > foobar.html
+      - name: Archive build output
+        run: tar --dereference --hard-dereference --directory _site/ -cvf artifact.tar .
+      - name: Upload Artifact
+        uses: actions/upload-artifact@main
+        with:
+          name: github-pages
+          path: ./artifact.tar
+          if-no-files-found: warn
+
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+       name: github-pages
+       url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1-beta
+        id: deployment
